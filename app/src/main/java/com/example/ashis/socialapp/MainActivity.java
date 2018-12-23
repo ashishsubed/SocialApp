@@ -1,5 +1,6 @@
 package com.example.ashis.socialapp;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private int counter = 5;
     private TextView userRegistration;
     private FirebaseAuth firebaseAuth;
+    private ProgressDialog progressDialog;
 
 
     @Override
@@ -38,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
         Login = findViewById(R.id.btnLogin);
         userRegistration = (TextView)findViewById(R.id.tvRegister);
         firebaseAuth = FirebaseAuth.getInstance();
+        progressDialog = new ProgressDialog(this);
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+
+        if(user != null){
+            finish();
+            startActivity(new Intent(MainActivity.this, secondActivity.class));
+        }
         Login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,17 +66,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void validate(String userName, String userPassword) {
 
-
+        progressDialog.show();
         firebaseAuth.signInWithEmailAndPassword(userName, userPassword).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(task.isSuccessful()){
+                    progressDialog.dismiss();
                     //Toast.makeText(MainActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
                     checkEmailVerification();
                 }else{
                     Toast.makeText(MainActivity.this, "Login Failed", Toast.LENGTH_SHORT).show();
                     counter--;
                     Info.setText("No of attempts remaining: " + counter);
+                    progressDialog.dismiss();
                     if(counter == 0){
                         Login.setEnabled(false);
                     }
@@ -83,14 +94,14 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser firebaseUser = firebaseAuth.getInstance().getCurrentUser();
         Boolean emailflag = firebaseUser.isEmailVerified();
 
-        startActivity(new Intent(MainActivity.this, secondActivity.class));
+        //startActivity(new Intent(MainActivity.this, secondActivity.class));
 
-//        if(emailflag){
-//            finish();
-//            startActivity(new Intent(MainActivity.this, SecondActivity.class));
-//        }else{
-//            Toast.makeText(this, "Verify your email", Toast.LENGTH_SHORT).show();
-//            firebaseAuth.signOut();
-//        }
+       if(emailflag){
+            finish();
+           startActivity(new Intent(MainActivity.this, secondActivity.class));
+        }else{
+          Toast.makeText(this, "Verify your email", Toast.LENGTH_SHORT).show();
+            firebaseAuth.signOut();
+        }
     }
 }
